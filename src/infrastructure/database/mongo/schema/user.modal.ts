@@ -11,6 +11,8 @@ const UserSchema = new Schema<IUserDocument>(
       trim: true,
       minlength: 2,
       maxlength: 50,
+      unique: true,
+
     },
 
     email: {

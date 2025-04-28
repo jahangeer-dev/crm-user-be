@@ -11,5 +11,6 @@ export interface IUser {
   avatarUrl?: string;
   isActive: boolean;
   emailVerified?: boolean;
-
+  createdAt?: Date;
+  updatedAt?: Date;
 }

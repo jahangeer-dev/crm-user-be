@@ -2,12 +2,15 @@ import { appLogger } from "@/shared/observability/logger/appLogger.js";
 import { appConfig } from "@/config/readers/appConfig.js";
 import express, { type Express } from "express";
 import { redisClient } from "@/infrastructure/database/redis/redisClient.js";
-import { errorHandler } from "./middlewares/errorHandler.js"; 
-import { morganMiddleware } from "@/shared/observability/logger/httpLogger.js"; 
-import { indexRouter } from "./routes/index.route.js"; 
-import { rabbitMQClient } from "../messaging/rabbitmq/rabbitmqClient.js"; 
+import { errorHandler } from "./middlewares/errorHandler.js";
+import { morganMiddleware } from "@/shared/observability/logger/httpLogger.js";
+import { indexRouter } from "./routes/index.route.js";
+import { rabbitMQClient } from "../messaging/rabbitmq/rabbitmqClient.js";
+import helmet from "helmet";
 import cors from "cors";
 import { mongoClient } from "../database/mongo/mongoClient.js";
+import { authenticationMiddleware } from "./middlewares/auth.middleware.js";
+import { AsyncHandler } from "./middlewares/asyncHandler.js";
 class Server {
     private static instance: Server;
     private readonly app: Express
@@ -37,9 +40,17 @@ class Server {
         })
     }
     private handleMiddleWares() {
-        this.app.use(cors())
+        this.app.use(cors({
+            origin: appConfig.app.allowedOrigin,
+            methods: ['GET', 'POST', 'PUT', 'DELETE'],
+            allowedHeaders: ['Content-Type', 'Authorization', "x-service"],
+            credentials: true,
+        }))
+        this.app.use(express.urlencoded({ extended: true }))
+        this.app.use(express.json({ limit: '50mb' }))
+        this.app.use(helmet())
         this.app.use(morganMiddleware)
-        this.app.use(express.json())
+        this.app.use(authenticationMiddleware.authenticate)
     }
 
     private handleRoutes() {

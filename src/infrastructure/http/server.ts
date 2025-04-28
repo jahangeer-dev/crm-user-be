@@ -39,6 +39,7 @@ class Server {
     private handleMiddleWares() {
         this.app.use(cors())
         this.app.use(morganMiddleware)
+        this.app.use(express.json())
     }
 
     private handleRoutes() {

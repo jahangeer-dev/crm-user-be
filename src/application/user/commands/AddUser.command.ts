@@ -11,7 +11,7 @@ export class AddUserCommand {
     }
 
     private validate() {
-        const validate = validatorInstance.validator.safeParse({  email: this.email, password: this.password });
+        const validate = validatorInstance.validator.safeParse(this);
         if (!validate.success) {
             throw new ValidationError(validate.error.message);
         }

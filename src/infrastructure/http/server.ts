@@ -1,0 +1,86 @@
+import { appLogger } from "@/shared/observability/logger/appLogger.js";
+import { appConfig } from "@/config/readers/appConfig.js";
+import express, { type Express } from "express";
+import { redisClient } from "@/infrastructure/database/redis/redisClient.js";
+import { errorHandler } from "./middlewares/errorHandler.js"; 
+import { morganMiddleware } from "@/shared/observability/logger/httpLogger.js"; 
+import { indexRouter } from "./routes/index.route.js"; 
+import { rabbitMQClient } from "../messaging/rabbitmq/rabbitmqClient.js"; 
+import cors from "cors";
+import { mongoClient } from "../database/mongo/mongoClient.js";
+class Server {
+    private static instance: Server;
+    private readonly app: Express
+    private constructor() {
+        this.app = express()
+    }
+
+    private async initDependencies() {
+        await mongoClient.connect()
+        await redisClient.connect()
+        await rabbitMQClient.connect()
+    }
+
+    public static getInstance() {
+        if (!Server.instance) {
+            Server.instance = new Server()
+        }
+        return Server.instance
+    }
+    public async init() {
+        this.initDependencies().then(async () => {
+            this.handleProcessSignals();
+            this.handleMiddleWares();
+            this.handleRoutes();
+            this.handleErrors();
+            this.listen();
+        })
+    }
+    private handleMiddleWares() {
+        this.app.use(cors())
+        this.app.use(morganMiddleware)
+    }
+
+    private handleRoutes() {
+
+        this.app.use("/api", indexRouter)
+
+    }
+    private handleErrors(): void {
+        this.app.use(errorHandler);
+    }
+
+    private handleProcessSignals(): void {
+        process.on('SIGTERM', () => {
+            redisClient.getClient().quit()
+            appLogger.info("redis", "Successfully disconnected.");
+            appLogger.info('event ', 'SIGTERM received. Shutting down gracefully.');
+            process.exit();
+        });
+
+        process.on('SIGINT', () => {
+            redisClient.getClient().quit()
+            appLogger.info("redis", "Successfully disconnected.");
+            appLogger.info(
+                'event ', 'SIGINT (Ctrl+C) received. Shutting down gracefully.'
+            );
+            process.exit();
+        });
+
+        process.on('uncaughtException', (err: Error) => {
+            appLogger.error('process ', `Uncaught exception: ${err.message}`);
+        });
+
+    }
+    private listen() {
+        this.app.listen(appConfig.app.port, () => {
+            appLogger.info("server", `App is running at ${appConfig.app.port}`)
+        })
+    }
+}
+
+
+export const server = Server.getInstance()
+
+
+

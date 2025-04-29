@@ -5,6 +5,7 @@ import { DuplicateResourceError, InternalServerError } from "@/shared/utils/erro
 import type { CreateUserResponseDTO, GetUserResponseDTO } from "@/application/user/dtos/UserReponseDTO.js";
 import { redisClient } from "../redis/redisClient.js";
 import type { MongooseError } from "mongoose";
+import logger from "@/shared/observability/logger/logger.js";
 export class UserRepository {
     private readonly redisclient = redisClient
     public async add(data: IUser): Promise<CreateUserResponseDTO> {
@@ -55,11 +56,14 @@ export class UserRepository {
         let user = await this.redisclient.get(userName) as (IUser & { _id: string }) | null;
 
         if (!user) {
+            appLogger.info("db", `User not found in cache, fetching from DB: ${userName}`);
             const userDoc = await UserModel.findOne({ userName }).exec();
             user = userDoc as (IUser & { _id: string }) | null;
+            if (!user) return null;
+
+            this.redisclient.set(user.userName, JSON.stringify(user), 60 * 60 * 24)
         }
 
-        if (!user) return null;
 
         return {
             id: user._id as string,

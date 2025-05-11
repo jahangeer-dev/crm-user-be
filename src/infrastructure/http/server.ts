@@ -10,7 +10,6 @@ import helmet from "helmet";
 import cors from "cors";
 import { mongoClient } from "../database/mongo/mongoClient.js";
 import { authenticationMiddleware } from "./middlewares/auth.middleware.js";
-import { AsyncHandler } from "./middlewares/asyncHandler.js";
 class Server {
     private static instance: Server;
     private readonly app: Express

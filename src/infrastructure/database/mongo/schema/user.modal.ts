@@ -12,7 +12,7 @@ const UserSchema = new Schema<IUserDocument>(
       minlength: 2,
       maxlength: 50,
       unique: true,
-
+      lowercase: true,
     },
 
     email: {

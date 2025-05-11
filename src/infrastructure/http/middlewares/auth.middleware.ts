@@ -2,7 +2,6 @@ import { appConfig } from "@/config/readers/appConfig.js"
 import { UnauthorizedError } from "@/shared/utils/errors/ApiError.js"
 import type { Request, Response, NextFunction } from "express"
 import { AsyncHandler } from "./asyncHandler.js"
-import { appLogger } from "@/shared/observability/logger/appLogger.js"
 
 class AuthenticationMiddleware {
     private static instance: AuthenticationMiddleware

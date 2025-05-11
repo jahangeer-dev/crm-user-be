@@ -8,8 +8,8 @@ class AddUserValidator {
             .email({ message: "Invalid email address" })
             .min(3, { message: "Email must be at least 3 characters long" })
             .trim(),
-        password: z
-            .string(),
+        passwordHash: z
+            .string().optional(),
         userName: z
             .string()
             .min(3, { message: "Username must be at least 3 characters long" })
@@ -19,9 +19,10 @@ class AddUserValidator {
         isOAuth: z
             .boolean()
             .default(false),
+        avatarUrl: z.string().optional()
     }).transform(data => ({
         email: data.email.trim(),
-        password: data.password,
+        password: data.passwordHash,
         userName: data.userName.trim(),
         isOAuth: data.isOAuth,
     }));

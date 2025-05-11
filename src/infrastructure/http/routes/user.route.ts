@@ -11,7 +11,11 @@ class UserRouter {
     }
     private initRoutes() {
         this.router.post("/", this.userController.addUser)
-        this.router.get("/:userNameOrEmail", this.userController.getUser)
+        this.router.get("/", this.userController.checkUserExists)
+        this.router.get("/username/:userName", this.userController.getUserByName)
+        this.router.get("/email/:email", this.userController.getUserByMail)
+
+
 
     }
     public getRouter() {

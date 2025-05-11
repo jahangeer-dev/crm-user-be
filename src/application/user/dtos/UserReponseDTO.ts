@@ -1,7 +1,5 @@
-export interface CreateUserResponseDTO {
-    id: string;
-}
-export interface GetUserResponseDTO {
+
+export interface UserResponseDTO {
     id: string;
     userName: string;
     email: string;
